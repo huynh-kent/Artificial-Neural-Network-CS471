@@ -56,7 +56,7 @@ class Node:
 		self.weight = [0] * len(self.children)
 
 		for i in range( len(self.children) ):
-			self.weight[i] = random.uniform(0, 100)
+			self.weight[i] = random.uniform(0, 1)
 			self.children[i].set_random_weights(current_layer_number + 1, node_per_layer_map)
 		return
 
