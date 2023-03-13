@@ -11,7 +11,7 @@ def read_file(file):
         temp = f.read().split(',')
         print(temp)
         for num in temp:
-            network.append(int(num.strip()))
+            network_layers.append(int(num.strip()))
         #return f.read().split(',')
 
 def read_input(file):
@@ -22,10 +22,13 @@ def read_input(file):
             inputs.append(float(num.strip()))
 
 
-def make_layers(layers, ):
-    for layer in layers:
-        for i in len(layer):
-            neurons = []
+def make_input_layer(layers, input):
+    neurons = []
+    for i in range(layers[0]):
+        neuron = Neuron()
+        neuron.value = input[i] 
+        neurons.append(Neuron())
+    network.append(neurons)
 
     
 
@@ -34,5 +37,7 @@ network = []
 inputs = []
 read_file('layers')
 read_input('inputs')
-print(network)
+print(network_layers)
 print(inputs)
+make_input_layer(network_layers, inputs)
+print(network)
