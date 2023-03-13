@@ -12,7 +12,9 @@ class Neuron:
             return
 
         for i in range(nodes_per_layer[current_layer]):
-            self.connections.append(Neuron())
+            new_neuron = Neuron()
+            new_neuron.collector += self.collector
+            self.connections.append(new_neuron)
 
         self.connections[0].make_layers(current_layer+1, nodes_per_layer)
 
@@ -30,14 +32,14 @@ class Neuron:
             self.connections[i].set_weights(current_layer+1, nodes_per_layer)
 
     def print_layers(self, current_layer, nodes_per_layer):
-        indent = f'{current_layer}'
+        layer = f'{current_layer}'
 
         if current_layer >= len(nodes_per_layer):
-            print(f"{indent} {self.weights}")
+            print(f"{layer} {self.collector}")
         
         for i in range(len(self.connections)):
             try:
-                print(f"{indent} with weight of {self.weights[i]}")
+                print(f"{layer} with weight of {self.weights[i]}")
             except:
                 pass
             self.connections[i].print_layers(current_layer+1, nodes_per_layer)
