@@ -60,6 +60,7 @@ class Node:
 			self.children[i].set_random_weights(current_layer_number + 1, node_per_layer_map)
 		return
 
+"""
 	def insertionSort(self, arr, names): #sorts nodes by weight, does the same to list of node names
 		#traverse through 1 to len(arr)
 		for i in range(1, len(arr)):
@@ -114,6 +115,7 @@ def generateLayers(numberOfLayers): #generates layers and nodes
         for i in range(numberOfLayers):
             NODE_COUNT_PER_LAYER.append(numberOfLayers + 1 - i)
 
+"""
 
 #main
 
