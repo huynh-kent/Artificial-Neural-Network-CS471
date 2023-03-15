@@ -75,18 +75,16 @@ def make_connections(network):
         for neuron in layer:
             try:
                 neuron.connections.append(network[network.index(layer)+1])
-            #    print('test')
             except:
                 pass
 
 def set_collectors(network):
     for layer in network:
         for neuron in layer:
-            print(neuron.collector)
+            print(neuron.collector, sep=' ')
             for connection in neuron.connections:
                 for connected_neuron in connection:
                     connected_neuron.collector += neuron.collector
-                    print(f'{neuron.collector} -> {connected_neuron.collector}')
 
 # make next layer
     # for each neuron in previous layer
@@ -94,45 +92,35 @@ def set_collectors(network):
         # add collector to nerons in new layer
         # repeat until no more layers
 
-def print_layers(layers, current_layer = 0):
+def print_layers(layers):
     for layer in layers:
         print(layer)
 
-    """
-    for i in range(layers[1]):
-        neuron = Neuron()
-        neuron.value = input[i] 
-        neurons.append(Neuron())
-    network.append(neurons)
-    """
-
 # main
-# declare variables
-network = []
-network_layers = []
-inputs = []
-# read file layers
-read_file('layers')
-# read input
-read_input('inputs')
-# make input layer
-make_input_layer(network_layers, inputs)
-make_hidden_layers(network_layers)
-# make next layer
-    # for each neuron in previous layer
-        # add new layer to connections
-        # add collector to nerons in new layer
-        # repeat until no more layers
-# make master neuron/node
-# master = Neuron()
-# master.make_layers(network_layers)
+if __name__ == '__main__':
+    # declare variables
+    network = []
+    network_layers = []
+    inputs = []
+    # read file layers
+    read_file('layers')
+    # read input
+    read_input('inputs')
+    # make input layer
+    make_input_layer(network_layers, inputs)
+    make_hidden_layers(network_layers)
+    # make next layer
+        # for each neuron in previous layer
+            # add new layer to connections
+            # add collector to nerons in new layer
+            # repeat until no more layers
 
-print(network_layers)
-print(inputs)
-#print(network)
-# master.print_layers(network_layers)
-print_layers(network)
-make_connections(network)
-set_collectors(network)
-#print_layers(network[0])
-print(network[0][0].collector)
+    print(network_layers)
+    print(inputs)
+    #print(network)
+    # master.print_layers(network_layers)
+    make_connections(network)
+    set_collectors(network)
+    #print_layers(network[0])
+    #print(network[0][0].collector)
+    #print_layers(network)
