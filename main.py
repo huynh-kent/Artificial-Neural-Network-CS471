@@ -81,7 +81,6 @@ def make_connections(network):
 def set_collectors(network):
     for layer in network:
         for neuron in layer:
-            print(neuron.collector, sep=' ')
             for connection in neuron.connections:
                 for connected_neuron in connection:
                     connected_neuron.collector += neuron.collector
@@ -92,9 +91,11 @@ def set_collectors(network):
         # add collector to nerons in new layer
         # repeat until no more layers
 
-def print_layers(layers):
-    for layer in layers:
-        print(layer)
+def print_layers(network):
+    for layers in network:
+        for neuron in layers:
+            print(neuron.collector, end=' ')
+        print()
 
 # main
 if __name__ == '__main__':
@@ -123,4 +124,4 @@ if __name__ == '__main__':
     set_collectors(network)
     #print_layers(network[0])
     #print(network[0][0].collector)
-    #print_layers(network)
+    print_layers(network)
