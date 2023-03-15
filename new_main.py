@@ -1,7 +1,7 @@
 
 class Neuron:
     def __init__(self):
-        self.collector = 0
+        self.collector = 0.0
         self.connections = []
         self.weights = []
 
@@ -52,8 +52,8 @@ def make_input_layer(layers, input):
     neurons = []
     for i in range(layers[0]):
         neuron = Neuron()
-        neuron.value = input[i] 
-        neurons.append(Neuron())
+        neuron.collector = input[i] 
+        neurons.append(neuron)
     network.append(neurons)
 
 def make_hidden_layers(layers, current_layer = 1):
@@ -78,6 +78,15 @@ def make_connections(network):
             #    print('test')
             except:
                 pass
+
+def set_collectors(network):
+    for layer in network:
+        for neuron in layer:
+            print(neuron.collector)
+            for connection in neuron.connections:
+                for connected_neuron in connection:
+                    connected_neuron.collector += neuron.collector
+                    print(f'{neuron.collector} -> {connected_neuron.collector}')
 
 # make next layer
     # for each neuron in previous layer
@@ -124,3 +133,6 @@ print(inputs)
 # master.print_layers(network_layers)
 print_layers(network)
 make_connections(network)
+set_collectors(network)
+#print_layers(network[0])
+print(network[0][0].collector)
