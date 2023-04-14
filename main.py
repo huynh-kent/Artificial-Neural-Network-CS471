@@ -94,6 +94,7 @@ def print_connections(network):
             print()          
         print()
 
+# Train Network
 def train(network, train_data, lr, n_epochs, target_error):
     num_outputs = network_layers[-1]
     epoch_list = []
@@ -119,7 +120,7 @@ def train(network, train_data, lr, n_epochs, target_error):
     for epoch in epoch_list:
         print(epoch)
 
-        
+# Forward Propagation
 def forward_prop(network, row):
     inputs = row
     for layers in network:
@@ -139,6 +140,7 @@ def forward_prop(network, row):
                 inputs = new_inputs
     return inputs
 
+# Backward Propagation
 def backward_prop(network, expected):
     for i in reversed(range(len(network))):
         errors = []
@@ -156,6 +158,7 @@ def backward_prop(network, expected):
             neuron = network[i][j]
             neuron.delta = (errors[j] * transfer_derivative(neuron.collector))
 
+# Update Weights
 def update_weights(network, row, lr):
     for i, layer in enumerate(network):
         collectors = []
@@ -170,18 +173,22 @@ def update_weights(network, row, lr):
             except: # last layer
                 pass
 
+# Activate Neuron
 def activate(neuron):
     for connection in neuron.connections:
         for i, connected_neuron in enumerate(connection):   
             connection[i].collector += neuron.collector * neuron.weights[i]
         connection[i].collector = transfer(connection[i].collector)
 
+# Activation Function (Sigmoid)
 def transfer(collector):
     return 1 / (1 + math.exp(-collector))
 
+# Derivative of Activation Function
 def transfer_derivative(collector):
     return collector * (1.0 - collector)
 
+# Create Network
 def new_network(row):
     # new network
     # make layers
@@ -204,5 +211,7 @@ if __name__ == '__main__':
     read_file('layers')
     read_input('inputs')
     
+    # create network
     neural_network = new_network(inputs[0])
+    # train network
     train(neural_network, inputs, lr = 0.1, n_epochs = 20, target_error = 0.1)
