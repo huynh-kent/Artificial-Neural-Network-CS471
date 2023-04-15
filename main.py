@@ -55,7 +55,7 @@ def make_connections(network):
 
                 # setting weights along with connection
                 for i in range(len(network[network.index(layer)+1])):
-                    neuron.weights.append(round(random.uniform(0,1), 2))
+                    neuron.weights.append(round(random.uniform(-1,1), 2))
                 weights_network.append(neuron.weights)
             except: # pass on last layer
                 print('except - make connections')
@@ -107,7 +107,7 @@ def train(network, train_data, lr, n_epochs, target_error):
             sum_error += sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
             
             if sum_error <= target_error:
-                epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
+                epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f, ' % (epoch_num, lr, sum_error, ))
                 for epoch in epoch_list:
                     print(epoch)
                 print('target error reached=%.3f' % sum_error)
@@ -214,4 +214,4 @@ if __name__ == '__main__':
     # create network
     neural_network = new_network(inputs[0])
     # train network
-    train(neural_network, inputs, lr = 0.1, n_epochs = 20, target_error = 0.1)
+    train(neural_network, inputs, lr = 0.1, n_epochs = 50, target_error = 0.05)
