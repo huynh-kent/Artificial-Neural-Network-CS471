@@ -77,6 +77,7 @@ def print_layers(network):
             print(neuron.collector, end=' ')    # print value of neuron, end with space not newline
         print()   
         
+# Print Weights of Network
 def print_weights(network):
     # for each layer in network
     for layers in network:
@@ -84,6 +85,7 @@ def print_weights(network):
             print(neuron.weights, end=' ')    # print weight of neuron, end with space not newline            
         print()
 
+# Print connections of network
 def print_connections(network):
     # for each layer in network
     for layers in network:
@@ -104,17 +106,20 @@ def train(network, train_data, lr, n_epochs, target_error):
             outputs = forward_prop(network, row)
             expected = [0 for i in range(num_outputs)]
             expected = [row[-1]]
-            sum_error += sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
-            
-            if sum_error <= target_error:
-                epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f, ' % (epoch_num, lr, sum_error, ))
-                for epoch in epoch_list:
-                    print(epoch)
-                print('target error reached=%.3f' % sum_error)
-                return
+
+            error = sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
+            sum_error += error
 
             backward_prop(network, expected)
             update_weights(network, row, lr)
+
+
+        if sum_error <= target_error:
+            epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error, ))
+            for epoch in epoch_list:
+                print(epoch)
+            print('target error reached=%.3f' % sum_error)
+            return
             
         epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
     for epoch in epoch_list:
@@ -214,4 +219,4 @@ if __name__ == '__main__':
     # create network
     neural_network = new_network(inputs[0])
     # train network
-    train(neural_network, inputs, lr = 0.1, n_epochs = 50, target_error = 0.05)
+    train(neural_network, inputs, lr = 0.1, n_epochs = 100, target_error = 0.05)
