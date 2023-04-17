@@ -55,7 +55,7 @@ def make_connections(network):
 
                 # setting weights along with connection
                 for i in range(len(network[network.index(layer)+1])):
-                    neuron.weights.append(round(random.uniform(0,1), 2))
+                    neuron.weights.append(round(random.uniform(-1,1), 2))
                 weights_network.append(neuron.weights)
             except: # pass on last layer
                 print('except - make connections')
@@ -77,6 +77,7 @@ def print_layers(network):
             print(neuron.collector, end=' ')    # print value of neuron, end with space not newline
         print()   
         
+# Print Weights of Network
 def print_weights(network):
     # for each layer in network
     for layers in network:
@@ -84,6 +85,7 @@ def print_weights(network):
             print(neuron.weights, end=' ')    # print weight of neuron, end with space not newline            
         print()
 
+# Print connections of network
 def print_connections(network):
     # for each layer in network
     for layers in network:
@@ -94,6 +96,7 @@ def print_connections(network):
             print()          
         print()
 
+# Train Network
 def train(network, train_data, lr, n_epochs, target_error):
     num_outputs = network_layers[-1]
     epoch_list = []
@@ -103,23 +106,26 @@ def train(network, train_data, lr, n_epochs, target_error):
             outputs = forward_prop(network, row)
             expected = [0 for i in range(num_outputs)]
             expected = [row[-1]]
-            sum_error += sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
-            
-            if sum_error <= target_error:
-                epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
-                for epoch in epoch_list:
-                    print(epoch)
-                print('target error reached=%.3f' % sum_error)
-                return
+
+            error = sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
+            sum_error += error
 
             backward_prop(network, expected)
             update_weights(network, row, lr)
+
+
+        if sum_error <= target_error:
+            epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error, ))
+            for epoch in epoch_list:
+                print(epoch)
+            print('target error reached=%.3f' % sum_error)
+            return
             
         epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
     for epoch in epoch_list:
         print(epoch)
 
-        
+# Forward Propagation
 def forward_prop(network, row):
     inputs = row
     for layers in network:
@@ -139,30 +145,41 @@ def forward_prop(network, row):
                 inputs = new_inputs
     return inputs
 
+# Backward Propagation
 def backward_prop(network, expected):
     for i in reversed(range(len(network))):
+ #       print(f'layer {i}')
         errors = []
-        if i != len(network)-1: # 3-1
+        if i != len(network)-1: # 3-1 not last layer
             for j in range(len(network[i])):
                 for k in range(len(network[i][j].weights)):
-                    weighted_sum += (network[i][j].weights[k] * network[i+1][k].delta)
+                    weighted_delta = (network[i][j].weights[k] * network[i+1][k].delta)
+                    weighted_sum += weighted_delta
+                    #print(f'weighted delta {weighted_delta}')
+        #            print(f'neuron {network[i][j]}')
+        #            print(f'weight {network[i][j].weights[k]}')
                 errors.append(weighted_sum)
-        else:
+        else: # last layer
             for j in range(len(network[i])):
                 neuron = network[i][j]
                 weighted_sum = (neuron.collector - expected[j])
                 errors.append(weighted_sum)
+        # calculate delta
         for j in range(len(network[i])):
             neuron = network[i][j]
             neuron.delta = (errors[j] * transfer_derivative(neuron.collector))
 
+# Update Weights
 def update_weights(network, row, lr):
+    print(f'row')
     for i, layer in enumerate(network):
+        print(f'layer {i}')
         collectors = []
         if i != 0: collectors = [prev_neuron.collector for prev_neuron in network[i-1]]
         else: collectors = row[:-1]
 
         for neuron in layer:
+            print(f'collectors {collectors}')
             try:
                 for j in range(len(neuron.weights)):
                     neuron.weights[j] -= lr * neuron.delta * collectors[j]
@@ -170,18 +187,22 @@ def update_weights(network, row, lr):
             except: # last layer
                 pass
 
+# Activate Neuron
 def activate(neuron):
     for connection in neuron.connections:
         for i, connected_neuron in enumerate(connection):   
             connection[i].collector += neuron.collector * neuron.weights[i]
         connection[i].collector = transfer(connection[i].collector)
 
+# Activation Function (Sigmoid)
 def transfer(collector):
     return 1 / (1 + math.exp(-collector))
 
+# Derivative of Activation Function
 def transfer_derivative(collector):
     return collector * (1.0 - collector)
 
+# Create Network
 def new_network(row):
     # new network
     # make layers
@@ -204,5 +225,7 @@ if __name__ == '__main__':
     read_file('layers')
     read_input('inputs')
     
+    # create network
     neural_network = new_network(inputs[0])
-    train(neural_network, inputs, lr = 0.1, n_epochs = 20, target_error = 0.1)
+    # train network
+    train(neural_network, inputs, lr = 0.4, n_epochs = 1, target_error = 0.05)
