@@ -15,9 +15,13 @@ def read_csv_data(file):
         lines = f.readlines()      # read lines
         for line in lines:  # for each line
             temp = line.split(',')  # seperate by commas
+            # for num in temp:
+            #     if num == 'A': temp.remove(num)  
+            # row = [float(num.strip()) for num in temp]
+            row = []
             for num in temp:
-                if num == 'A': temp.remove(num)   
-            row = [float(num.strip()) for num in temp]
+                normalized_num = float(num.strip())/255
+                row.append(normalized_num)
             csv_inputs.append(row)          # add row to inputs array
 
 # Read File for Layer Sizes
@@ -66,7 +70,7 @@ def make_connections(network):
 
                 # setting weights along with connection
                 for i in range(len(network[network.index(layer)+1])):
-                    neuron.weights.append(round(random.uniform(-1,1), 2))
+                    neuron.weights.append(round(random.uniform(0,1), 2))
                 weights_network.append(neuron.weights)
             except: # pass on last layer
                 print('except - make connections')
@@ -91,10 +95,11 @@ def print_layers(network):
 # Print Weights of Network
 def print_weights(network):
     # for each layer in network
-    for layers in network:
-        for neuron in layers:
-            print(neuron.weights, end=' ')    # print weight of neuron, end with space not newline            
-        print()
+    for i, layers in enumerate(network):
+        if i != 0:
+            for neuron in layers:
+                print(neuron.weights, end=' ')    # print weight of neuron, end with space not newline            
+            print()
 
 # Print connections of network
 def print_connections(network):
@@ -235,17 +240,23 @@ if __name__ == '__main__':
     weights_network = []    # weights for each neuron
 
     # read file for layer sizes and input values
-    read_file('layers')
-    read_input('inputs')
+    #read_file('layers')
+    #read_input('inputs')
     
-    # create network
-    neural_network = new_network(inputs[0])
-    print_weights(neural_network)
-    # train network
-    train(neural_network, inputs, lr = 0.4, n_epochs = 10, target_error = 0.05)
+    # # create network
+    # neural_network = new_network(inputs[0])
+    # # before weights
+    # print_weights(neural_network)
+    # # train network
+    # train(neural_network, inputs, lr = 0.4, n_epochs = 10, target_error = 0.05)
+    # # after weights
+    # print_weights(neural_network)
 
-    print_weights(neural_network)
-
+    # handwriting testing
     csv_inputs = []
     read_csv_data('A.csv')
-    print(csv_inputs)
+    read_file('handwriting_layers')
+    neural_network = new_network(csv_inputs[0])
+    print_weights(neural_network)
+    train(neural_network, csv_inputs, lr = 0.4, n_epochs = 100, target_error = 0.05)
+    print_weights(neural_network)
