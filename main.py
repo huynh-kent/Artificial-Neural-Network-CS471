@@ -233,21 +233,29 @@ def backward_prop(network, expected):
 
 # Update Weights
 def update_weights(network, row, lr):
-    for i in range(len(network)):
-        if i != len(network)-1: # not last layer
- #       print(f'layer {i}')
-            inputs = []
-            for neuron in network[i]:
-                inputs.append(neuron.collector)
+    for i in range(len(network)-1):
+#         if i != len(network)-1: # not last layer
+#  #       print(f'layer {i}')
+        for j in range(len(network[i])):
+            neuron = network[i][j]
+            for k in range(len(network[i+1])):
+                delta = network[i+1][k].delta
+                neuron.weights[k] -= lr * delta
 
-            # print(inputs)
-            # print()
 
-            for j in range(len(network[i])):
-                neuron = network[i][j]
-                for k in range(len(network[i+1])):
-  #                  print(f'neuron weights {j} {neuron.weights} delta {neuron.delta} collector {inputs[j]}')
-                    neuron.weights[k] -= lr * neuron.delta * inputs[j]
+
+#             inputs = []
+#             for neuron in network[i]:
+#                 inputs.append(neuron.collector)
+
+#             # print(inputs)
+#             # print()
+
+#             for j in range(len(network[i])):
+#                 neuron = network[i][j]
+#                 for k in range(len(network[i+1])):
+#   #                  print(f'neuron weights {j} {neuron.weights} delta {neuron.delta} collector {inputs[j]}')
+#                     neuron.weights[k] -= lr * neuron.delta * inputs[j]
   #                  print(f'neuron weights {j} {neuron.weights} delta {neuron.delta} collector {inputs[j]}')
 
 # Activate Neuron
@@ -302,7 +310,7 @@ if __name__ == '__main__':
 
     print_weights(neural_network)
     # train network
-    train(neural_network, inputs, lr = 0.5, n_epochs = 1, target_error = 0.05)
+    train(neural_network, inputs, lr = 0.4, n_epochs = 1000, target_error = 0.05)
 
     print_weights(neural_network)
     # for layer in neural_network:
