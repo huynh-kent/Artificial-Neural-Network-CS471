@@ -56,8 +56,7 @@ def make_connections(network):
                 # setting weights along with connection
                 for i in range(len(network[network.index(layer)+1])):
                     neuron.weights.append(round(random.uniform(0,1), 2))
-                neuron.weights.append(1.0) # bias weight
-                weights_network.append(neuron.weights)
+                #neuron.weights.append(1.0) # bias weight
             except: # pass on last layer
                 print('except - make connections')
 
@@ -112,7 +111,7 @@ def train(network, train_data, lr, n_epochs, target_error):
     num_outputs = network_layers[-1]
     epoch_list = []
     for epoch_num, epoch in enumerate(range(n_epochs), 1):
-        sum_error = 0
+        sum_error = 0.0
         for row in train_data:
         #    reset_neurons(network)
             new_input_layer(network, row)
@@ -120,15 +119,19 @@ def train(network, train_data, lr, n_epochs, target_error):
             expected = [0 for i in range(num_outputs)]
             expected = [row[-1]]
 
+            # error = 0.0
+            # for i in range(len(expected)):
+            #     error += (expected[i] - outputs[i])**2
+            #     print(f'expected {expected[i]} output {outputs[i]}')
+
+            
             error = sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
-    #        print(f'error {error}')
             sum_error += error
 
             backward_prop(network, expected)
             update_weights(network, row, lr)
 
-
-            print(f'output {outputs[0]:.3f} expected {expected[0]:.0f} error {error:.3f}')
+            print(f'output {outputs} expected {expected[0]:.0f} error {error:.3f}')
 
         if sum_error <= target_error:
             epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error, ))
@@ -153,7 +156,7 @@ def forward_prop(network, row):
             activation = 0.0
             for k in range(len(network[i])):
                 prev_neuron = network[i][k]
-                activation += prev_neuron.weights[-1] # bias
+                #activation += prev_neuron.weights[-1] # bias
                 activation += inputs[k] * prev_neuron.weights[j]
             neuron.collector = transfer(activation)
             new_inputs.append(neuron.collector)
@@ -189,7 +192,7 @@ def update_weights(network, row, lr):
             for k in range(len(network[i+1])):
                 delta = network[i+1][k].delta
                 neuron.weights[k] -= lr * delta * neuron.collector
-            neuron.weights[-1] -= lr * delta # bias
+            #neuron.weights[-1] -= lr * delta # bias
 
 # Activate Neuron
 def activate(neuron_weights, inputs):
@@ -226,6 +229,10 @@ def new_network(row):
     make_connections(network)
     return network
 
+def predict(network, row):
+    outputs = forward_prop(network, row)
+    return outputs.index(max(outputs))
+
 ### Main
 if __name__ == '__main__':
     # declare arrays
@@ -241,8 +248,13 @@ if __name__ == '__main__':
     # create network
     neural_network = new_network(inputs[0])
 
-    print_weights(neural_network)
-    # train network
-    train(neural_network, inputs, lr = 0.4, n_epochs = 100, target_error = 0.05)
+    #print_weights(neural_network)
 
-    print_weights(neural_network)
+    # train network
+    train(neural_network, inputs, lr = 0.4, n_epochs = 10000, target_error = 0.05)
+
+    #print_weights(neural_network)
+    # predict
+    # for row in inputs:
+    #     prediction = predict(neural_network, row)
+    #     print(f'Expected={row[-1]}, Got={prediction}')
