@@ -130,7 +130,7 @@ def reset_neurons(network):
             neuron.collector = 0.0
 
 # Train Network
-def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
+def train(network, data, letter, lr, n_epochs, target_error, n_batches, sample_size):
     num_outputs = network_layers[-1]
 #    epoch_list = []
     for n_batch, batch in enumerate(range(n_batches), 1):
@@ -170,7 +170,7 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
             #     return
             
             # print error each epoch
-            print('>epoch=%d, error=%.3f,               lr=%.2f, sample size=%d' % (epoch_num, sum_error, lr, sample_size))
+            print('>epoch=%d, error=%.3f,               letter%s, lr=%.2f, sample size=%d' % (epoch_num, sum_error, letter, lr, sample_size))
 
             # # reaches desired accuracy
             # if sum_error <= target_error:
@@ -354,7 +354,7 @@ if __name__ == '__main__':
     #     print('------------------------------')
 
     # train
-    train(neural_network, df, lr = 0.1, n_epochs = 100, target_error = 0.05, n_batches=1,sample_size=10)
+    train(neural_network, df, letter, lr = 0.1, n_epochs = 100, target_error = 0.05, n_batches=1, sample_size=10)
 
     # save trained weights
     save_weights(neural_network, weights_file)
