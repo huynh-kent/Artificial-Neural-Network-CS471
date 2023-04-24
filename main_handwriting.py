@@ -294,8 +294,8 @@ def load_network(file):
     load_weights(network, file)
     return network
 
-def save_weights(network, letter):
-    with open(f'weights_{letter}.txt', 'w') as f:
+def save_weights(network, path):
+    with open(path, 'w') as f:
         for layer in network:
             for neuron in layer:
                 f.write(str(neuron.weights))
@@ -332,10 +332,12 @@ if __name__ == '__main__':
     read_file('handwriting_layers')
     # load data
     df = get_df('A_Z_cleaned.csv', letter)
+    # weights file path
+    weights_file = f'weights_{letter}.txt'
 
     # check if saved weights
-    if path.exists(f'weights_{letter}.txt'):
-        neural_network = load_network(f'weights_{letter}.txt')  # load saved weights
+    if path.exists(weights_file):
+        neural_network = load_network(weights_file)  # load saved weights
     else: neural_network = new_network()                        # create new network
 
     
@@ -345,8 +347,7 @@ if __name__ == '__main__':
     #     print('------------------------------')
 
     # train
-    train(neural_network, df, lr = 0.2, n_epochs = 10, target_error = 0.05, n_batches=1,sample_size=100)
+    train(neural_network, df, lr = 0.8, n_epochs = 10, target_error = 0.05, n_batches=1,sample_size=100)
 
     # save trained weights
-    save_weights(neural_network, letter)
-    
+    save_weights(neural_network, weights_file)
