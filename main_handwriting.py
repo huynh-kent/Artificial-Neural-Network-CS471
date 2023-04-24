@@ -133,8 +133,8 @@ def reset_neurons(network):
 def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
     num_outputs = network_layers[-1]
 #    epoch_list = []
-    for n_batches, batch in enumerate(range(n_batches), 1):
-        print(f'starting batch {n_batches}')
+    for n_batch, batch in enumerate(range(n_batches), 1):
+        print(f'starting batch {n_batch}/{n_batches}')
         # same sample for each epoch
         train_data = get_sample(data, sample_size)
         for epoch_num, epoch in enumerate(range(n_epochs), 1):
@@ -170,12 +170,12 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
             #     return
             
 
-            print('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
+            print('>epoch=%d, error=%.3f,               lr=%.2f, sample size=%d' % (epoch_num, sum_error, lr, sample_size))
             # reaches desired accuracy
             if sum_error <= target_error:
                 print('target error reached=%.3f' % sum_error)
                 return
-        print(f'batch {n_batches} complete with sum error {sum_error:.3f}')
+        print(f'batch {n_batch} complete with sum error {sum_error:.3f}')
             #epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
         # for epoch in epoch_list:
         #     print(epoch)
@@ -336,22 +336,22 @@ if __name__ == '__main__':
     read_file('handwriting_layers')
     # load data
     df = get_df('A_Z_cleaned.csv', letter)
+    # network layers
+    layers = str(network_layers).strip('')
     # weights file path
-    weights_file = f'weights_{letter}.txt'
+    weights_file = f'weights_{letter}_{layers}.txt'
 
     # check if saved weights
     if path.exists(weights_file):
         neural_network = load_network(weights_file)  # load saved weights
     else: neural_network = new_network()                        # create new network
 
-    
-
     # for row in csv_inputs:
     #     print(row)
     #     print('------------------------------')
 
     # train
-    train(neural_network, df, lr = 0.8, n_epochs = 10, target_error = 0.05, n_batches=1,sample_size=100)
+    train(neural_network, df, lr = 0.1, n_epochs = 10, target_error = 0.05, n_batches=5,sample_size=10)
 
     # save trained weights
     save_weights(neural_network, weights_file)
