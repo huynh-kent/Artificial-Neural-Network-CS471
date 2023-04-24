@@ -2,6 +2,7 @@ import random
 import math
 import pandas as pd
 import numpy as np
+import os.path as path
 
 # Neuron Class
 class Neuron:
@@ -134,42 +135,46 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
 #    epoch_list = []
     for n_batches, batch in enumerate(range(n_batches), 1):
         print(f'starting batch {n_batches}')
-    #    train_data = get_sample(data, sample_size)
-    for epoch_num, epoch in enumerate(range(n_epochs), 1):
-        sum_error = 0.0
-        for row in train_data:
-        #    reset_neurons(network)
-            new_input_layer(network, row)
-            outputs = forward_prop(network, row)
-            expected = [0 for i in range(num_outputs)]
-            expected = [row[-1]]
+        # same sample for each epoch
+        train_data = get_sample(data, sample_size)
+        for epoch_num, epoch in enumerate(range(n_epochs), 1):
+            sum_error = 0.0
+            # new sample each epoch
+            #train_data = get_sample(data)
+            for row in train_data:
+            #    reset_neurons(network)
+                new_input_layer(network, row)
+                outputs = forward_prop(network, row)
+                expected = [0 for i in range(num_outputs)]
+                expected = [row[-1]]
 
-            # test_error = 0.0
-            # for i in range(len(expected)):
-            #     test_error += (expected[i] - outputs[i])**2
-            #print(f'expected {expected} output {outputs[0]:2f}')
+                # test_error = 0.0
+                # for i in range(len(expected)):
+                #     test_error += (expected[i] - outputs[i])**2
+                #print(f'expected {expected} output {outputs[0]:2f}')
 
+                
+                error = sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
+                sum_error += error
+
+                backward_prop(network, expected)
+                update_weights(network, lr)
+
+                #print(f'output {outputs} expected {expected[0]:.0f} error {error:.3f}')
+
+            # if sum_error <= target_error:
+            #     epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error, ))
+            #     for epoch in epoch_list:
+            #         print(epoch)
+            #     print('target error reached=%.3f' % sum_error)
+            #     return
             
-            error = sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
-            sum_error += error
 
-            backward_prop(network, expected)
-            update_weights(network, lr)
-
-            #print(f'output {outputs} expected {expected[0]:.0f} error {error:.3f}')
-
-        if sum_error <= target_error:
-            epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error, ))
-            for epoch in epoch_list:
-                print(epoch)
-            print('target error reached=%.3f' % sum_error)
-            return
-        
-
-        print('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
-        #epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
-    for epoch in epoch_list:
-        print(epoch)
+            print('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
+        print(f'batch {n_batches} complete with sum error {sum_error:.3f}')
+            #epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
+        # for epoch in epoch_list:
+        #     print(epoch)
 
 # Forward Propagation
 def forward_prop(network, row):
@@ -320,28 +325,28 @@ if __name__ == '__main__':
     inputs = []         # input values for input layer
     weights_network = []    # weights for each neuron
 
-    # # read file for layer sizes and input values
-    # read_file('layers')
-    # read_input('inputs')
-    
-    # # # create network
-    # # neural_network = new_network(inputs[0])
-
-    # neural_network = new_network()
-
-    # # train network
-    # train(neural_network, inputs, lr = 0.4, n_epochs = 10000, target_error = 0.05)
-
-
     # handwriting testing
-    csv_inputs = []
-    read_csv_data('A.csv')
+    # letter desired
+    letter = 'A'
+    # get network layers
     read_file('handwriting_layers')
+    # load data
+    df = get_df('A_Z_cleaned.csv', letter)
+
+    # check if saved weights
+    if path.exists(f'weights_{letter}.txt'):
+        neural_network = load_network(f'weights_{letter}.txt')  # load saved weights
+    else: neural_network = new_network()                        # create new network
+
+    
 
     # for row in csv_inputs:
     #     print(row)
     #     print('------------------------------')
 
-    neural_network = new_network()
+    # train
+    train(neural_network, df, lr = 0.2, n_epochs = 10, target_error = 0.05, n_batches=1,sample_size=100)
 
-    train(neural_network, csv_inputs, lr = 0.2, n_epochs = 10000, target_error = 0.05)
+    # save trained weights
+    save_weights(neural_network, letter)
+    
