@@ -337,7 +337,8 @@ if __name__ == '__main__':
     # load data
     df = get_df('A_Z_cleaned.csv', letter)
     # network layers
-    layers = str(network_layers).strip(' ')
+    layers = str(network_layers).replace(' ', '')
+    print(layers)
     # weights file path
     weights_file = f'weights_{letter}_{layers}.txt'
 
