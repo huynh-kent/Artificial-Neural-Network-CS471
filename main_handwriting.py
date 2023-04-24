@@ -169,12 +169,14 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
             #     print('target error reached=%.3f' % sum_error)
             #     return
             
-
+            # print error each epoch
             print('>epoch=%d, error=%.3f,               lr=%.2f, sample size=%d' % (epoch_num, sum_error, lr, sample_size))
-            # reaches desired accuracy
-            if sum_error <= target_error:
-                print('target error reached=%.3f' % sum_error)
-                return
+
+            # # reaches desired accuracy
+            # if sum_error <= target_error:
+            #     print('target error reached=%.3f' % sum_error)
+            #     return
+            
         print(f'batch {n_batch} complete with sum error {sum_error:.3f}')
             #epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
         # for epoch in epoch_list:
