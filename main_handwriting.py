@@ -1,6 +1,7 @@
 import random
 import math
 import pandas as pd
+import numpy as np
 
 # Neuron Class
 class Neuron:
@@ -242,6 +243,17 @@ def transfer(collector):
 def transfer_derivative(collector):
     return (collector) * (1.0 - (collector))
 
+# load csv into pandas df
+def get_df(file, letter):
+    df = pd.read_csv(file)
+    # create expected output column
+    df['expected'] = np.where(df['letter'] == f'{letter}', 1, 0)
+    # drop letter label column
+    df.drop(columns=['letter'], inplace=True)
+    
+    return df
+
+
 # Create Network
 def new_network():
     # new network
@@ -275,6 +287,8 @@ def load_weights(network, file):
                 line = f.readline().strip('[]\n')
                 neuron.weights = [float(num) for num in line.split(',')]
 
+
+# TODO prediction
 def predict(network, row):
     outputs = forward_prop(network, row)
     #return outputs.index(max(outputs))
