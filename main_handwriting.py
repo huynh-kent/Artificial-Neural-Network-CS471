@@ -250,8 +250,25 @@ def get_df(file, letter):
     df['expected'] = np.where(df['letter'] == f'{letter}', 1, 0)
     # drop letter label column
     df.drop(columns=['letter'], inplace=True)
-    
+
     return df
+
+# get random sample of training data from df
+def get_sample(df, sample_size):
+    letter_sample = df[df['expected']==1].sample(n=int(sample_size/5)) # 20% sample of training letter
+    not_letter_sample = df[df['expected']==0].sample(n=int(sample_size*4/5)) # 80% sample of training not letter
+    sample = pd.merge(not_letter_sample, letter_sample, how='outer')    # merge samples into one df
+
+    # convert df to list of inputs
+    sample_inputs = []
+    for index, row in sample.iterrows():
+        row = [(float(num)/255.0) for num in row] # normalize inputs
+        if row[-1] != 0.0:  
+            row[-1] = 1.0   # set expected output to 1.0
+        sample_inputs.append(row)
+
+    return sample_inputs
+
 
 
 # Create Network
