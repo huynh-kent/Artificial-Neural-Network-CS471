@@ -21,7 +21,7 @@ def read_csv_data(file):
             # unnormalized data
             row = [(float(num.strip())/255) for num in temp]
             if row[-1] != 0.0: row[-1] = 1.0
-            print(len(row))
+            #print(len(row))
 
             # # normalize data
             # row = []
@@ -128,9 +128,12 @@ def reset_neurons(network):
             neuron.collector = 0.0
 
 # Train Network
-def train(network, train_data, lr, n_epochs, target_error):
+def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
     num_outputs = network_layers[-1]
-    epoch_list = []
+#    epoch_list = []
+    for n_batches, batch in enumerate(range(n_batches), 1):
+        print(f'starting batch {n_batches}')
+    #    train_data = get_sample(data, sample_size)
     for epoch_num, epoch in enumerate(range(n_epochs), 1):
         sum_error = 0.0
         for row in train_data:
@@ -143,7 +146,7 @@ def train(network, train_data, lr, n_epochs, target_error):
             # test_error = 0.0
             # for i in range(len(expected)):
             #     test_error += (expected[i] - outputs[i])**2
-            print(f'expected {expected} output {outputs[0]:2f}')
+            #print(f'expected {expected} output {outputs[0]:2f}')
 
             
             error = sum((expected[i]-outputs[i])**2 for i in range(len(expected)))
@@ -249,6 +252,28 @@ def new_network():
     # make connections
     make_connections(network)
     return network
+
+def load_network(file):
+    network = []
+    make_input_layer(network, network_layers)
+    make_hidden_layers(network, network_layers)
+    load_weights(network, file)
+    return network
+
+def save_weights(network, letter):
+    with open(f'weights_{letter}.txt', 'w') as f:
+        for layer in network:
+            for neuron in layer:
+                f.write(str(neuron.weights))
+                f.write('\n')
+
+def load_weights(network, file):
+    with open(file, 'r') as f:
+        for i in range(len(network)-1):
+            for j in range(len(network[i])):
+                neuron = network[i][j]
+                line = f.readline().strip('[]\n')
+                neuron.weights = [float(num) for num in line.split(',')]
 
 def predict(network, row):
     outputs = forward_prop(network, row)
