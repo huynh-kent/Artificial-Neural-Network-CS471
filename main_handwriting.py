@@ -33,11 +33,15 @@ def read_csv_data(file):
             csv_inputs.append(row)          # add row to inputs array
 
 # Read File for Layer Sizes
-def read_file(file):
+def read_layers(file):
+    network_layers = []             # create array to store layer sizes
     with open(file, 'r') as f:      # open file
         temp = f.read().split(',')  # seperate by commas
         for num in temp:            # for each number
             network_layers.append(int(num.strip())) # add number as int to network_layers array
+    
+    return network_layers
+
 
 # Read File for Input Values
 def read_input(file):
@@ -47,6 +51,42 @@ def read_input(file):
             temp = line.split(',')  # seperate by commas   
             row = [float(num.strip()) for num in temp]
             inputs.append(row)          # add row to inputs array
+
+# Create Network
+def new_network(layers):
+    # new network
+    # make layers
+    network = []
+    make_input_layer(network, layers)
+    make_hidden_layers(network, layers)
+    # make connections
+    make_connections(network)
+    return network
+
+def load_network(file):
+    network = []
+    make_input_layer(network, layers)
+    make_hidden_layers(network, layers)
+    load_weights(network, file)
+    return network
+
+def combine_network():
+    pass
+
+def save_weights(network, path):
+    with open(path, 'w') as f:
+        for layer in network:
+            for neuron in layer:
+                f.write(str(neuron.weights))
+                f.write('\n')
+
+def load_weights(network, file):
+    with open(file, 'r') as f:
+        for i in range(len(network)-1):
+            for j in range(len(network[i])):
+                neuron = network[i][j]
+                line = f.readline().strip('[]\n')
+                neuron.weights = [float(num) for num in line.split(',')]
 
 # Make Input Layer of Network
 def make_input_layer(network, layers):
@@ -83,14 +123,6 @@ def make_connections(network):
             except: # pass on last layer
                 print('New Weights')
 
-# Set Collectors of Neurons
-def set_collectors(network):
-    # for each connection in network, add value of previous neuron to connected neuron
-    for layer in network:
-        for neuron in layer:        
-            for connection in neuron.connections: 
-                for connected_neuron in connection:
-                    connected_neuron.collector += neuron.collector
                     
 # Print Layers of Network
 def print_layers(network):
@@ -108,16 +140,6 @@ def print_weights(network):
             print(neuron.weights, end=' ')    # print weight of neuron, end with space not newline            
         print()
 
-# Print connections of network
-def print_connections(network):
-    # for each layer in network
-    for layers in network:
-        for neuron in layers:
-            for connection in neuron.connections:
-                print(connection, end=' ')
-            print(neuron.weights, end=' ')
-            print()          
-        print()
 
 def new_input_layer(network, input):
     for i in range(len(network[0])):
@@ -255,42 +277,6 @@ def get_sample(df, sample_size):
 
     return sample_inputs
 
-
-
-# Create Network
-def new_network():
-    # new network
-    # make layers
-    network = []
-    make_input_layer(network, network_layers)
-    make_hidden_layers(network, network_layers)
-    # make connections
-    make_connections(network)
-    return network
-
-def load_network(file):
-    network = []
-    make_input_layer(network, network_layers)
-    make_hidden_layers(network, network_layers)
-    load_weights(network, file)
-    return network
-
-def save_weights(network, path):
-    with open(path, 'w') as f:
-        for layer in network:
-            for neuron in layer:
-                f.write(str(neuron.weights))
-                f.write('\n')
-
-def load_weights(network, file):
-    with open(file, 'r') as f:
-        for i in range(len(network)-1):
-            for j in range(len(network[i])):
-                neuron = network[i][j]
-                line = f.readline().strip('[]\n')
-                neuron.weights = [float(num) for num in line.split(',')]
-
-
 def predict(network, row):
     outputs = forward_prop(network, row)
     return outputs
@@ -330,16 +316,39 @@ def load_test_data(letter):
 
     return test_inputs
 
+def combine_weights():
+    letters = ['A', 'P', 'L', 'U', 'S']
+    layers = []
+    
 
+    for letter in letters:
+        with open(f'weights_{letter}.txt', 'r') as f:
+            with open(f'weights_{letter}_combined.txt', 'w') as combined:
+                for line in f:
+                    combined.write(line)
+    """
+        input size = 784
+        hidden size = len(weights[1:])*len(letters)
+        make network
+        load weights
+            input weights
+                for each input neuron
+                    append weights
+            hidden weights
+                for each hidden neuron append weights
+    """
 
+def combined_layers(layers, letters):
+    combined_layers = [layers[0]]
+    combined_layers.extend(layer*len(letters) for layer in layers[1:])
+    print(combined_layers)
 
 
 ### Main
 if __name__ == '__main__':
     # declare variables
-    neural_network = []        # main network
-    network_layers = [] # size of each layer
-    inputs = []         # input values for input layer
+    #neural_network = []        # main network
+    #inputs = []         # input values for input layer
     accuracy = 0.0      # accuracy of network
 
     # handwriting testing
@@ -350,7 +359,7 @@ if __name__ == '__main__':
     #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
 
     # get network layers
-    read_file('handwriting_layers')
+    network_layers = read_layers('handwriting_layers')
 
     # load data
     df = get_df('A_Z_cleaned.csv', letter)
@@ -373,3 +382,12 @@ if __name__ == '__main__':
         accuracy = test(neural_network, test_data=load_test_data(letter))
     # save trained weights
         save_weights(neural_network, weights_file)
+
+    
+    ### combined models
+    # combined letters
+    letters = ['A', 'P', 'L', 'U', 'S']
+    # get combined layers
+    combined_layers(network_layers)
+    # create combined network
+
