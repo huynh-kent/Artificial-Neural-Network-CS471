@@ -81,7 +81,7 @@ def combine_network(layers, letters, layers_path):
 def combined_layers(layers, letters):
     combined_layers = [layers[0]]
     combined_layers.extend(layer*len(letters) for layer in layers[1:])
-    print(combined_layers)
+    #print(combined_layers)
     return combined_layers
 
 def combine_weights(network, letters, layers_path):
@@ -231,6 +231,27 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
         # for epoch in epoch_list:
         #     print(epoch)
 
+def combined_forward_prop(network, row, letters):
+    inputs = row
+    for i in range(len(network)-1):
+        new_inputs = []
+        for j in range(len(network[i+1])):
+            neuron = network[i+1][j]
+            activation = 0.0
+            if i == 0:
+                for k in range(len(network[i])):
+                    prev_neuron = network[i][k]
+                    #activation += prev_neuron.weights[-1] # bias
+                    activation += inputs[k] * prev_neuron.weights[j]
+            else:
+                for k in range(len(network[i]) // len(letters)):
+                    prev_neuron = network[i][k*(j+1)]
+                    activation += inputs[k*(j+1)] * prev_neuron.weights[j]
+            neuron.collector = transfer(activation)
+            new_inputs.append(neuron.collector)
+        inputs = new_inputs
+    return inputs
+
 # Forward Propagation
 def forward_prop(network, row):
     inputs = row
@@ -359,7 +380,7 @@ if __name__ == '__main__':
 
     # handwriting testing
     # letter desired
-    letter = 'A'
+    letter = 'U'
 
     # create test data
     #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
