@@ -81,7 +81,7 @@ def make_connections(network):
                     neuron.weights.append(round(random.uniform(-1,1), 2))
                 #neuron.weights.append(1.0) # bias weight
             except: # pass on last layer
-                print('except - make connections')
+                print('New Weights')
 
 # Set Collectors of Neurons
 def set_collectors(network):
@@ -130,7 +130,7 @@ def reset_neurons(network):
             neuron.collector = 0.0
 
 # Train Network
-def train(network, data, letter, lr, n_epochs, target_error, n_batches, sample_size):
+def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
     num_outputs = network_layers[-1]
 #    epoch_list = []
     for n_batch, batch in enumerate(range(n_batches), 1):
@@ -170,7 +170,7 @@ def train(network, data, letter, lr, n_epochs, target_error, n_batches, sample_s
             #     return
             
             # print error each epoch
-            print('>epoch=%d, error=%.3f,               letter%s, lr=%.2f, sample size=%d' % (epoch_num, sum_error, letter, lr, sample_size))
+            print('>epoch=%d error=%.3f -------- letter=%s lr=%.2f sample size=%d layers=%s' % (epoch_num, sum_error, letter, lr, sample_size, layers))
 
             # # reaches desired accuracy
             # if sum_error <= target_error:
@@ -319,8 +319,21 @@ def load_weights(network, file):
 # TODO prediction
 def predict(network, row):
     outputs = forward_prop(network, row)
-    #return outputs.index(max(outputs))
     return outputs
+
+def test(network, df):
+    test_data = get_sample(df, 100)
+    correct = 0
+    for row in test_data:
+        outputs = predict(network, row)
+        error = abs(row[-1] - outputs[-1])
+        if error < 0.5:
+            correct += 1
+        print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
+    accuracy = (correct / len(test_data)) * 100.0
+    
+    print(f'accuracy: {accuracy}%')
+
 
 
 ### Main
@@ -340,7 +353,7 @@ if __name__ == '__main__':
     df = get_df('A_Z_cleaned.csv', letter)
     # network layers
     layers = str(network_layers).replace(' ', '')
-    print(layers)
+    print(f'layers {layers}')
     # weights file path
     weights_file = f'weights_{letter}_{layers}.txt'
 
@@ -354,7 +367,31 @@ if __name__ == '__main__':
     #     print('------------------------------')
 
     # train
-    train(neural_network, df, letter, lr = 0.1, n_epochs = 100, target_error = 0.05, n_batches=1, sample_size=10)
+    train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
+    # test
+    test(neural_network, df)
+
+
+    # # new letter
+    # letter = 'P'
+    # df = get_df('A_Z_cleaned.csv', letter)
+    # neural_network = new_network()                        
+    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
+
+    # letter = 'L'
+    # df = get_df('A_Z_cleaned.csv', letter)
+    # neural_network = new_network()                        
+    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
+
+    # letter = 'U'
+    # df = get_df('A_Z_cleaned.csv', letter)
+    # neural_network = new_network()                        
+    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
+    
+    # letter = 'S'
+    # df = get_df('A_Z_cleaned.csv', letter)
+    # neural_network = new_network()                        
+    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
 
     # save trained weights
-    save_weights(neural_network, weights_file)
+    #save_weights(neural_network, weights_file)
