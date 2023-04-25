@@ -266,8 +266,8 @@ def get_df(file, letter):
 
 # get random sample of training data from df
 def get_sample(df, sample_size):
-    letter_sample = df[df['expected']==1].sample(n=int(sample_size/5)) # 20% sample of training letter
-    not_letter_sample = df[df['expected']==0].sample(n=int(sample_size*4/5)) # 80% sample of training not letter
+    letter_sample = df[df['expected']==1].sample(n=int(sample_size/2)) # 20% sample of training letter
+    not_letter_sample = df[df['expected']==0].sample(n=int(sample_size/2)) # 80% sample of training not letter
     sample = pd.merge(not_letter_sample, letter_sample, how='outer')    # merge samples into one df
 
     # convert df to list of inputs
@@ -316,23 +316,46 @@ def load_weights(network, file):
                 neuron.weights = [float(num) for num in line.split(',')]
 
 
-# TODO prediction
 def predict(network, row):
     outputs = forward_prop(network, row)
     return outputs
 
-def test(network, df):
-    test_data = get_sample(df, 100)
+def test(network, test_data):
     correct = 0
     for row in test_data:
         outputs = predict(network, row)
         error = abs(row[-1] - outputs[-1])
         if error < 0.5:
             correct += 1
-        print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
-    accuracy = (correct / len(test_data)) * 100.0
+        #print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
+    accuracy = (float(correct) / len(test_data)) * 100.0
     
-    print(f'accuracy: {accuracy}%')
+    print(f'accuracy: {accuracy:.2f}% correct/total: {correct}/{len(test_data)}')
+
+def create_test_data(file, test_sample_size, letter):
+    df = pd.read_csv(file)
+    letter_data = df[df['letter']==f'{letter}']
+    letter_sample = letter_data.sample(n=int(test_sample_size*2/10)) # 20% sample of test letter
+    else_data = df[df['letter']!=f'{letter}']
+    else_sample = else_data.sample(n=int(test_sample_size*8/10)) # 80% sample of test random
+    test_data = pd.merge(else_sample, letter_sample, how='outer')    # merge samples into one df
+    test_data['expected'] = np.where(test_data['letter'] == f'{letter}', 1, 0)
+    test_data.drop(columns=['letter'], inplace=True)
+    test_data = test_data.div(255.0)
+    test_data['expected'] = np.where(test_data['expected'] > 0.0, 1.0, 0.0)
+    test_data.to_csv(f'test_data_{letter}.csv', index=False)
+
+def load_test_data(letter):
+    df = pd.read_csv(f'test_data_{letter}.csv')
+
+    test_inputs = []
+    for index, row in df.iterrows():
+        row = [num for num in row]
+        test_inputs.append(row)
+
+    return test_inputs
+
+
 
 
 
@@ -347,10 +370,16 @@ if __name__ == '__main__':
     # handwriting testing
     # letter desired
     letter = 'A'
+
+    # create test data
+    #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
+
     # get network layers
     read_file('handwriting_layers')
+
     # load data
     df = get_df('A_Z_cleaned.csv', letter)
+
     # network layers
     layers = str(network_layers).replace(' ', '')
     print(f'layers {layers}')
@@ -367,9 +396,10 @@ if __name__ == '__main__':
     #     print('------------------------------')
 
     # train
-    train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
+    train(neural_network, df, lr = 0.1, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
     # test
-    test(neural_network, df)
+    test(neural_network, test_data=load_test_data(letter))
+
 
 
     # # new letter
