@@ -63,15 +63,49 @@ def new_network(layers):
     make_connections(network)
     return network
 
-def load_network(file):
+def load_network(file, layers):
     network = []
     make_input_layer(network, layers)
     make_hidden_layers(network, layers)
     load_weights(network, file)
     return network
 
-def combine_network():
-    pass
+def combine_network(layers, letters, layers_path):
+    network = []
+    new_layers = combined_layers(layers, letters)
+    make_input_layer(network, new_layers)
+    make_hidden_layers(network, new_layers)
+    combine_weights(network, letters, layers_path)
+    return network
+
+def combined_layers(layers, letters):
+    combined_layers = [layers[0]]
+    combined_layers.extend(layer*len(letters) for layer in layers[1:])
+    print(combined_layers)
+    return combined_layers
+
+def combine_weights(network, letters, layers_path):
+    for i in range(len(network)-1):
+        if i == 0:
+            for j in range(len(network[i])):
+                neuron = network[i][j]
+                neuron.weights = []
+                for letter in letters:
+                    with open(f'weights_{letter}_{layers_path}.txt') as f:
+                        line = f.readline().strip('[]\n')
+                        neuron.weights.extend(float(num) for num in line.split(','))
+        else:
+            for j, letter in enumerate(letters, 1):
+                for k in range(int(len(network[i])/len(letters))):
+                    neuron = network[i][j*k]
+                    with open(f'weights_{letter}_{layers_path}.txt') as f:
+                        line = f.readline().strip('[]\n')
+                        neuron.weights = [float(num) for num in line.split(',')]
+
+                        
+
+
+
 
 def save_weights(network, path):
     with open(path, 'w') as f:
@@ -316,34 +350,6 @@ def load_test_data(letter):
 
     return test_inputs
 
-def combine_weights():
-    letters = ['A', 'P', 'L', 'U', 'S']
-    layers = []
-    
-
-    for letter in letters:
-        with open(f'weights_{letter}.txt', 'r') as f:
-            with open(f'weights_{letter}_combined.txt', 'w') as combined:
-                for line in f:
-                    combined.write(line)
-    """
-        input size = 784
-        hidden size = len(weights[1:])*len(letters)
-        make network
-        load weights
-            input weights
-                for each input neuron
-                    append weights
-            hidden weights
-                for each hidden neuron append weights
-    """
-
-def combined_layers(layers, letters):
-    combined_layers = [layers[0]]
-    combined_layers.extend(layer*len(letters) for layer in layers[1:])
-    print(combined_layers)
-
-
 ### Main
 if __name__ == '__main__':
     # declare variables
@@ -353,29 +359,39 @@ if __name__ == '__main__':
 
     # handwriting testing
     # letter desired
-    letter = 'S'
+    letter = 'A'
 
     # create test data
     #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
 
     # get network layers
     network_layers = read_layers('handwriting_layers')
-
-    # load data
-    df = get_df('A_Z_cleaned.csv', letter)
-
     # network layers
     layers = str(network_layers).replace(' ', '')
     # weights file path
     weights_file = f'weights_{letter}_{layers}.txt'
 
+    ### combined models
+    # combined letters
+    letters = ['A', 'S']
+
+    # create combined network
+    combined_network = combine_network(network_layers, letters, layers)
+    for layer in combined_network[-2:-1]:
+        for neuron in layer:
+            print(neuron.weights)
+
+    # load data
+    df = get_df('A_Z_cleaned.csv', letter)
+
+
     # check if saved weights
     if path.exists(weights_file):
-        neural_network = load_network(weights_file)  # load saved weights
-    else: neural_network = new_network()             # create new network
+        neural_network = load_network(weights_file, network_layers)  # load saved weights
+    else: neural_network = new_network(network_layers)               # create new network
 
-    # train until 99% accurate
-    while accuracy < 99.0:
+    # train until 95% accurate
+    while accuracy < 95.0:
     # train
         train(neural_network, df, lr = 0.4, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
     # test
@@ -383,11 +399,6 @@ if __name__ == '__main__':
     # save trained weights
         save_weights(neural_network, weights_file)
 
-    
-    ### combined models
-    # combined letters
-    letters = ['A', 'P', 'L', 'U', 'S']
-    # get combined layers
-    combined_layers(network_layers)
-    # create combined network
+    print('finished training')
+
 
