@@ -168,7 +168,7 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
             # if target error reached, go to next batch
             if sum_error <= target_error:
                 print('target error reached=%.3f' % sum_error)
-                return
+                break
             
         print(f'batch {n_batch} complete with sum error {sum_error:.3f}')
             #epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
