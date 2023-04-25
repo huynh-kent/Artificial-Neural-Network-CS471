@@ -197,7 +197,7 @@ def forward_prop(network, row):
             neuron.collector = transfer(activation)
             new_inputs.append(neuron.collector)
         inputs = new_inputs
-        
+
     return inputs
 
 # Backward Propagation
@@ -313,6 +313,7 @@ def test(network, test_data):
     accuracy = (float(correct) / len(test_data)) * 100.0
     
     print(f'accuracy: {accuracy:.2f}% correct/total: {correct}/{len(test_data)}')
+    return accuracy
 
 def create_test_data(file, test_sample_size, letter):
     df = pd.read_csv(file)
@@ -342,10 +343,11 @@ def load_test_data(letter):
 
 ### Main
 if __name__ == '__main__':
-    # declare arrays
+    # declare variables
     neural_network = []        # main network
     network_layers = [] # size of each layer
     inputs = []         # input values for input layer
+    accuracy = 0.0      # accuracy of network
 
     # handwriting testing
     # letter desired
@@ -370,11 +372,13 @@ if __name__ == '__main__':
         neural_network = load_network(weights_file)  # load saved weights
     else: neural_network = new_network()             # create new network
 
+    # train until 99% accurate
+    while accuracy < 99.0:
     # train
-    train(neural_network, df, lr = 0.4, n_epochs = 5, target_error = 0.05, n_batches=20, sample_size=20)
+        train(neural_network, df, lr = 0.4, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
     # test
-    test(neural_network, test_data=load_test_data(letter))
+        accuracy = test(neural_network, test_data=load_test_data(letter))
 
 
     # save trained weights
-    #save_weights(neural_network, weights_file)
+    save_weights(neural_network, weights_file)
