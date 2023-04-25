@@ -161,21 +161,14 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
                 update_weights(network, lr)
 
                 #print(f'output {outputs} expected {expected[0]:.0f} error {error:.3f}')
-
-            # if sum_error <= target_error:
-            #     epoch_list.append('--->epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error, ))
-            #     for epoch in epoch_list:
-            #         print(epoch)
-            #     print('target error reached=%.3f' % sum_error)
-            #     return
             
             # print error each epoch
             print('>epoch=%d error=%.3f -------- letter=%s lr=%.2f sample size=%d layers=%s' % (epoch_num, sum_error, letter, lr, sample_size, layers))
 
-            # # reaches desired accuracy
-            # if sum_error <= target_error:
-            #     print('target error reached=%.3f' % sum_error)
-            #     return
+            # if target error reached, go to next batch
+            if sum_error <= target_error:
+                print('target error reached=%.3f' % sum_error)
+                return
             
         print(f'batch {n_batch} complete with sum error {sum_error:.3f}')
             #epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
