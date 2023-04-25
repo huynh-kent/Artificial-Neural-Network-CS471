@@ -371,7 +371,5 @@ if __name__ == '__main__':
         train(neural_network, df, lr = 0.4, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
     # test
         accuracy = test(neural_network, test_data=load_test_data(letter))
-
-
     # save trained weights
-    save_weights(neural_network, weights_file)
+        save_weights(neural_network, weights_file)
