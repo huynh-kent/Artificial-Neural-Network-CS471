@@ -196,14 +196,13 @@ def forward_prop(network, row):
                 activation += inputs[k] * prev_neuron.weights[j]
             neuron.collector = transfer(activation)
             new_inputs.append(neuron.collector)
-            
         inputs = new_inputs
+        
     return inputs
 
 # Backward Propagation
 def backward_prop(network, expected):
     for i in reversed(range(len(network))):
- #       errors = []
         if i != len(network)-1: # 3-1 not last layer
             for j in range(len(network[i])):
                 neuron = network[i][j]
@@ -217,7 +216,6 @@ def backward_prop(network, expected):
             for j in range(len(network[i])):
                 neuron = network[i][j]
                 weighted_sum = neuron.collector - expected[j]
- #               errors.append(weighted_sum)
                 neuron.delta = weighted_sum * transfer_derivative(neuron.collector)
 
 # Update Weights
@@ -229,22 +227,6 @@ def update_weights(network, lr):
                 delta = network[i+1][k].delta
                 neuron.weights[k] -= lr * delta * neuron.collector
             #neuron.weights[-1] -= lr * delta # bias
-
-# Activate Neuron
-def activate(neuron_weights, inputs):
-    activation = 0.0
-    print(f'activation inputs {inputs}')
-    print(f'activation weights {neuron_weights}')
-    for i in range(len(neuron_weights)):
-        activation += neuron_weights[i] * inputs[i]
-        print(f'activation sum {activation}')
-    return activation
-
-
-    # for connection in neuron.connections:
-    #     for i, connected_neuron in enumerate(connection):   
-    #         connection[i].collector += neuron.collector * neuron.weights[i]
-    #     connection[i].collector = transfer(connection[i].collector)
 
 # Activation Function (Sigmoid)
 def transfer(collector):
@@ -258,7 +240,7 @@ def transfer_derivative(collector):
 def get_df(file, letter):
     df = pd.read_csv(file)
     # create expected output column
-    df['expected'] = np.where(df['letter'] == f'{letter}', 1, 0)
+    df['expected'] = np.where(df['letter'] == f'{letter}', 1.0, 0.0)
     # drop letter label column
     df.drop(columns=['letter'], inplace=True)
 
@@ -266,8 +248,8 @@ def get_df(file, letter):
 
 # get random sample of training data from df
 def get_sample(df, sample_size):
-    letter_sample = df[df['expected']==1].sample(n=int(sample_size/2)) # 20% sample of training letter
-    not_letter_sample = df[df['expected']==0].sample(n=int(sample_size/2)) # 80% sample of training not letter
+    letter_sample = df[df['expected']==1].sample(n=int(sample_size/2)) # 50% sample of training letter
+    not_letter_sample = df[df['expected']==0].sample(n=int(sample_size/2)) # 50% sample of training not letter
     sample = pd.merge(not_letter_sample, letter_sample, how='outer')    # merge samples into one df
 
     # convert df to list of inputs
@@ -347,7 +329,6 @@ def create_test_data(file, test_sample_size, letter):
 
 def load_test_data(letter):
     df = pd.read_csv(f'test_data_{letter}.csv')
-
     test_inputs = []
     for index, row in df.iterrows():
         row = [num for num in row]
@@ -365,11 +346,10 @@ if __name__ == '__main__':
     neural_network = []        # main network
     network_layers = [] # size of each layer
     inputs = []         # input values for input layer
-    weights_network = []    # weights for each neuron
 
     # handwriting testing
     # letter desired
-    letter = 'A'
+    letter = 'S'
 
     # create test data
     #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
@@ -382,46 +362,19 @@ if __name__ == '__main__':
 
     # network layers
     layers = str(network_layers).replace(' ', '')
-    print(f'layers {layers}')
     # weights file path
     weights_file = f'weights_{letter}_{layers}.txt'
 
     # check if saved weights
     if path.exists(weights_file):
         neural_network = load_network(weights_file)  # load saved weights
-    else: neural_network = new_network()                        # create new network
-
-    # for row in csv_inputs:
-    #     print(row)
-    #     print('------------------------------')
+    else: neural_network = new_network()             # create new network
 
     # train
-    train(neural_network, df, lr = 0.1, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
+    train(neural_network, df, lr = 0.4, n_epochs = 5, target_error = 0.05, n_batches=20, sample_size=20)
     # test
     test(neural_network, test_data=load_test_data(letter))
 
-
-
-    # # new letter
-    # letter = 'P'
-    # df = get_df('A_Z_cleaned.csv', letter)
-    # neural_network = new_network()                        
-    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
-
-    # letter = 'L'
-    # df = get_df('A_Z_cleaned.csv', letter)
-    # neural_network = new_network()                        
-    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
-
-    # letter = 'U'
-    # df = get_df('A_Z_cleaned.csv', letter)
-    # neural_network = new_network()                        
-    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
-    
-    # letter = 'S'
-    # df = get_df('A_Z_cleaned.csv', letter)
-    # neural_network = new_network()                        
-    # train(neural_network, df, lr = 0.45, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=10)
 
     # save trained weights
     #save_weights(neural_network, weights_file)
