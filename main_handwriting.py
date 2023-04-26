@@ -70,45 +70,6 @@ def load_network(file, layers):
     load_weights(network, file)
     return network
 
-def combine_network(layers, letters, layers_path):
-    network = []
-    new_layers = combined_layers(layers, letters)
-    make_input_layer(network, new_layers)
-    make_hidden_layers(network, new_layers)
-    combine_weights(network, letters, layers_path)
-    return network
-
-def combined_layers(layers, letters):
-    combined_layers = [layers[0]]
-    combined_layers.extend(layer*len(letters) for layer in layers[1:])
-    #print(combined_layers)
-    return combined_layers
-
-def combine_weights(network, letters, layers_path):
-    for i in range(len(network)-1):
-        if i == 0:
-            for j in range(len(network[i])):
-                neuron = network[i][j]
-                neuron.weights = []
-                for letter in letters:
-                    with open(f'weights_{letter}_{layers_path}.txt') as f:
-                        line = f.readline().strip('[]\n')
-                        neuron.weights.extend(float(num) for num in line.split(','))
-        else:
-            for j, letter in enumerate(letters):
-                neurons_per_section = len(network[i])//len(letters)
-                for k in range(neurons_per_section):
-                    #print(f'{i} {j} {k} {j*k}')
-                    neuron = network[i][k+(j*neurons_per_section)]
-                    with open(f'weights_{letter}_{layers_path}.txt') as f:
-                        line = f.readline().strip('[]\n')
-                        neuron.weights = [float(num) for num in line.split(',')]
-
-                        
-
-
-
-
 def save_weights(network, path):
     with open(path, 'w') as f:
         for layer in network:
@@ -122,6 +83,8 @@ def load_weights(network, file):
             for j in range(len(network[i])):
                 neuron = network[i][j]
                 line = f.readline().strip('[]\n')
+                # print(line)
+                # print()
                 neuron.weights = [float(num) for num in line.split(',')]
 
 # Make Input Layer of Network
@@ -233,42 +196,6 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
         # for epoch in epoch_list:
         #     print(epoch)
 
-def combined_forward_prop(network, row, letters):
-    inputs = row
-    for i in range(len(network)-1):
-        new_inputs = []
-        if i == 0:
-            for j in range(len(network[i+1])):
-                neuron = network[i+1][j]
-                activation = 0.0
-                for k in range(len(network[i])):
-                    prev_neuron = network[i][k]
-                    #activation += prev_neuron.weights[-1] # bias
-                    activation += inputs[k] * prev_neuron.weights[j]
-                neuron.collector = transfer(activation)
-                new_inputs.append(neuron.collector)
-
-        else:
-            for j in range(0, len(letters)):
-                neurons_per_section = len(network[i+1])//len(letters)
-                prev_neurons_per_section = len(network[i])//len(letters)
-                for k in range(neurons_per_section):
-                    #print(f'{i} {j} {k} {k+(j*neurons_per_section)}')
-                    neuron = network[i+1][k+(j*neurons_per_section)]
-                    activation = 0.0
-                    for l in range(prev_neurons_per_section):
-                        prev_neuron = network[i][l+(j*prev_neurons_per_section)]
-                        # print(f'{i} {j} {k} {l+(j*prev_neurons_per_section)}')
-                        # print(f'inputs {inputs[l+(j*prev_neurons_per_section)]}')
-                        #print(f'weights {prev_neuron.weights}')
-                        # print(f'weights {prev_neuron.weights[k]}')
-                        activation += inputs[l+(j*prev_neurons_per_section)] * prev_neuron.weights[k]
-
-                    neuron.collector = transfer(activation)
-                    new_inputs.append(neuron.collector)
-
-        inputs = new_inputs
-    return inputs
 
 # Forward Propagation
 def forward_prop(network, row):
@@ -354,10 +281,6 @@ def predict(network, row):
     outputs = forward_prop(network, row)
     return outputs
 
-def combined_predict(network, row, letters):
-    outputs = combined_forward_prop(network, row, letters)
-    return outputs
-
 def test(network, test_data):
     correct = 0
     for row in test_data:
@@ -371,18 +294,119 @@ def test(network, test_data):
     print(f'accuracy: {accuracy:.2f}% correct/total: {correct}/{len(test_data)}')
     return accuracy
 
+def combine_network(layers, letters, layers_path):
+    network = []
+    new_layers = combined_layers(layers, letters)
+    make_input_layer(network, new_layers)
+    make_hidden_layers(network, new_layers)
+    combine_weights(network, letters, layers_path)
+    return network
+
+def combined_layers(layers, letters):
+    combined_layers = [layers[0]]
+    combined_layers.extend(layer*len(letters) for layer in layers[1:])
+    return combined_layers
+
+def combine_weights(network, letters, layers_path):
+    for i in range(len(network)-1):
+        if i == 0:
+            for j in range(len(network[i])):
+                neuron = network[i][j]
+                neuron.weights = []
+                for letter in letters:
+                    with open(f'weights_{letter}_{layers_path}.txt') as f:
+                        line = f.readline().strip('[]\n')
+                        # print(line)
+                        # print()
+                        neuron.weights.extend(float(num) for num in line.split(','))
+        else:
+            neurons_per_section = len(network[i])//len(letters)
+            for j, letter in enumerate(letters):
+                with open(f'weights_{letter}_{layers_path}.txt') as f:
+                    for k in range(neurons_per_section):
+                        #print(f'{i} {j} {k} {j*k}')
+                        neuron = network[i][k+(j*neurons_per_section)]
+                        line = f.readline().strip('[]\n')
+                        print(line)
+                        print()
+                        neuron.weights = [float(num) for num in line.split(',')]
+
+def combined_forward_prop(network, row, letters):
+    inputs = row
+    for i in range(len(network)-1):
+        new_inputs = []
+        if i == 0:
+            for j in range(len(network[i+1])):
+                neuron = network[i+1][j]
+                activation = 0.0
+                for k in range(len(network[i])):
+                    prev_neuron = network[i][k]
+                    #activation += prev_neuron.weights[-1] # bias
+                    activation += inputs[k] * prev_neuron.weights[j]
+                neuron.collector = transfer(activation)
+                new_inputs.append(neuron.collector)
+
+        else:
+            for j in range(0, len(letters)):
+                neurons_per_section = len(network[i+1])//len(letters)
+                prev_neurons_per_section = len(network[i])//len(letters)
+                for k in range(neurons_per_section):
+                    #print(f'{i} {j} {k} {k+(j*neurons_per_section)}')
+                    neuron = network[i+1][k+(j*neurons_per_section)]
+                    activation = 0.0
+                    for l in range(prev_neurons_per_section):
+                        prev_neuron = network[i][l+(j*prev_neurons_per_section)]
+                        # print(f'{i} {j} {k} {l+(j*prev_neurons_per_section)}')
+                        # print(f'inputs {inputs[l+(j*prev_neurons_per_section)]}')
+                        #print(f'weights {prev_neuron.weights}')
+                        # print(f'weights {prev_neuron.weights[k]}')
+                        activation += inputs[l+(j*prev_neurons_per_section)] * prev_neuron.weights[k]
+
+                    neuron.collector = transfer(activation)
+                    new_inputs.append(neuron.collector)
+
+        inputs = new_inputs
+    return inputs
+
+
+def combined_predict(network, row, letters):
+    outputs = combined_forward_prop(network, row, letters)
+    print(outputs)
+    print(outputs.index(max(outputs)))
+    # letter_output = {0:0.0, 
+    #                  1:15.0, 
+    #                  2:11.0,
+    #                  3:20.0,
+    #                  4:18.0,
+    #                  }
+    # output = letter_output.get(outputs.index(max(outputs)))
+    # print(output)
+
+    return outputs
+
 def combined_test(network, test_data, letters):
     correct = 0
     for row in test_data:
+        expected = [0 for i in range(len(network[-1]))]
+        expected[int(row[-1])] = 1
+        print(f'expected: {expected}')
         outputs = combined_predict(network, row, letters)
         error = abs(row[-1] - outputs[-1])
         if error < 0.5:
             correct += 1
-        print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
+    #    print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
     accuracy = (float(correct) / len(test_data)) * 100.0
     
     print(f'accuracy: {accuracy:.2f}% correct/total: {correct}/{len(test_data)}')
     return accuracy
+
+def combined_load_test_data(file):
+    df = pd.read_csv(file)
+    test_inputs = []
+    for index, row in df.iterrows():
+        row = [num for num in row]
+        test_inputs.append(row)
+    return test_inputs
 
 def create_test_data(file, test_sample_size, letter):
     df = pd.read_csv(file)
@@ -406,6 +430,22 @@ def load_test_data(letter):
 
     return test_inputs
 
+def create_compiled_test_data(file, test_sample_size, letters):
+    df = pd.read_csv(file)
+    test_data = pd.DataFrame()
+    for letter in letters:
+        letter_data = df[df['letter']==f'{letter}']
+        letter_sample = letter_data.sample(n=int(test_sample_size*2/10)) # 20% sample of test letter
+        test_data = test_data.append(letter_sample)
+    else_data = df[df['letter'].isin(letters)==False]
+    else_sample = else_data.sample(n=int(test_sample_size*8/10)) # 80% sample of test random
+    test_data = test_data.append(else_sample)
+    test_data['expected'] = np.where(test_data['letter'].isin(letters), 1, 0)
+    test_data.drop(columns=['letter'], inplace=True)
+    test_data = test_data.div(255.0)
+    test_data['expected'] = np.where(test_data['expected'] > 0.0, 1.0, 0.0)
+    test_data.to_csv(f'test_data_compiled.csv', index=False)
+
 ### Main
 if __name__ == '__main__':
     # declare variables
@@ -415,7 +455,7 @@ if __name__ == '__main__':
 
     # handwriting testing
     # letter desired
-    letter = 'U'
+    letter = 'A'
 
     # create test data
     #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
@@ -429,7 +469,6 @@ if __name__ == '__main__':
 
     # # load data
     # df = get_df('A_Z_cleaned.csv', letter)
-
 
     # # check if saved weights
     # if path.exists(weights_file):
@@ -449,9 +488,9 @@ if __name__ == '__main__':
 
     ### combined models
     # combined letters
-    letters = ['A', 'S']
+    letters = ['A', 'P', 'L', 'U', 'S']
     # create combined network
     combined_network = combine_network(network_layers, letters, layers)
-    accuracy = combined_test(combined_network, test_data=load_test_data(letter), letters=letters)
+    #accuracy = combined_test(combined_network, test_data=combined_load_test_data('APLUS.csv'), letters=letters)
 
 
