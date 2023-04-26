@@ -402,7 +402,9 @@ def combined_predict(network, row, letters):
 def a_z_predict(network, row):
     outputs = forward_prop(network, row)
     outputs = softmax(outputs)
+    #print(outputs, sep=' - ')
     output = letter_output.get(outputs.index(max(outputs)))
+    #print(output)
     return output
 
 def a_z_test(network, test_data):
@@ -412,10 +414,11 @@ def a_z_test(network, test_data):
         expected = row[-1]
         output = a_z_predict(network, row)
         #print(f'expected: {expected} output: {outputs}')
+        # print(f'{letter_output.get(output)}')
         expected_letter = letter_output.get(expected)
-        output_letter = letter_output.get(output)
-        print(f'row {row_num} - expected letter: {expected_letter} output letter: {output_letter}')
-        if expected_letter == output_letter:
+        #output_letter = letter_output.get(output)
+        print(f'row {row_num} - expected letter: {expected_letter} output letter: {output}')
+        if expected_letter == output:
             correct += 1
         # else: print(f'failed - expected letter: {expected_letter} output letter: {output_letter}')
         # error = abs(row[-1] - outputs[-1])
@@ -673,7 +676,7 @@ if __name__ == '__main__':
     # train until 95% accurate
     while accuracy < 95.0:
     # train
-        train(neural_network, df_inputs, lr = 0.4, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
+        train(neural_network, df_inputs, lr = 0.4, n_epochs = 20, target_error = 0.05, n_batches=1, sample_size=20)
     # test
         accuracy = a_z_test(neural_network, test_data=random.sample(df_inputs, 100))
     # save trained weights
