@@ -95,9 +95,11 @@ def combine_weights(network, letters, layers_path):
                         line = f.readline().strip('[]\n')
                         neuron.weights.extend(float(num) for num in line.split(','))
         else:
-            for j, letter in enumerate(letters, 1):
-                for k in range(int(len(network[i])/len(letters))):
-                    neuron = network[i][j*k]
+            for j, letter in enumerate(letters):
+                neurons_per_section = len(network[i])//len(letters)
+                for k in range(neurons_per_section):
+                    #print(f'{i} {j} {k} {j*k}')
+                    neuron = network[i][k+(j*neurons_per_section)]
                     with open(f'weights_{letter}_{layers_path}.txt') as f:
                         line = f.readline().strip('[]\n')
                         neuron.weights = [float(num) for num in line.split(',')]
@@ -235,20 +237,36 @@ def combined_forward_prop(network, row, letters):
     inputs = row
     for i in range(len(network)-1):
         new_inputs = []
-        for j in range(len(network[i+1])):
-            neuron = network[i+1][j]
-            activation = 0.0
-            if i == 0:
+        if i == 0:
+            for j in range(len(network[i+1])):
+                neuron = network[i+1][j]
+                activation = 0.0
                 for k in range(len(network[i])):
                     prev_neuron = network[i][k]
                     #activation += prev_neuron.weights[-1] # bias
                     activation += inputs[k] * prev_neuron.weights[j]
-            else:
-                for k in range(len(network[i]) // len(letters)):
-                    prev_neuron = network[i][k*(j+1)]
-                    activation += inputs[k*(j+1)] * prev_neuron.weights[j]
-            neuron.collector = transfer(activation)
-            new_inputs.append(neuron.collector)
+                neuron.collector = transfer(activation)
+                new_inputs.append(neuron.collector)
+
+        else:
+            for j in range(0, len(letters)):
+                neurons_per_section = len(network[i+1])//len(letters)
+                prev_neurons_per_section = len(network[i])//len(letters)
+                for k in range(neurons_per_section):
+                    #print(f'{i} {j} {k} {k+(j*neurons_per_section)}')
+                    neuron = network[i+1][k+(j*neurons_per_section)]
+                    activation = 0.0
+                    for l in range(prev_neurons_per_section):
+                        prev_neuron = network[i][l+(j*prev_neurons_per_section)]
+                        # print(f'{i} {j} {k} {l+(j*prev_neurons_per_section)}')
+                        # print(f'inputs {inputs[l+(j*prev_neurons_per_section)]}')
+                        #print(f'weights {prev_neuron.weights}')
+                        # print(f'weights {prev_neuron.weights[k]}')
+                        activation += inputs[l+(j*prev_neurons_per_section)] * prev_neuron.weights[k]
+
+                    neuron.collector = transfer(activation)
+                    new_inputs.append(neuron.collector)
+
         inputs = new_inputs
     return inputs
 
@@ -336,6 +354,10 @@ def predict(network, row):
     outputs = forward_prop(network, row)
     return outputs
 
+def combined_predict(network, row, letters):
+    outputs = combined_forward_prop(network, row, letters)
+    return outputs
+
 def test(network, test_data):
     correct = 0
     for row in test_data:
@@ -344,6 +366,19 @@ def test(network, test_data):
         if error < 0.5:
             correct += 1
         #print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
+    accuracy = (float(correct) / len(test_data)) * 100.0
+    
+    print(f'accuracy: {accuracy:.2f}% correct/total: {correct}/{len(test_data)}')
+    return accuracy
+
+def combined_test(network, test_data, letters):
+    correct = 0
+    for row in test_data:
+        outputs = combined_predict(network, row, letters)
+        error = abs(row[-1] - outputs[-1])
+        if error < 0.5:
+            correct += 1
+        print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
     accuracy = (float(correct) / len(test_data)) * 100.0
     
     print(f'accuracy: {accuracy:.2f}% correct/total: {correct}/{len(test_data)}')
@@ -392,34 +427,31 @@ if __name__ == '__main__':
     # weights file path
     weights_file = f'weights_{letter}_{layers}.txt'
 
+    # # load data
+    # df = get_df('A_Z_cleaned.csv', letter)
+
+
+    # # check if saved weights
+    # if path.exists(weights_file):
+    #     neural_network = load_network(weights_file, network_layers)  # load saved weights
+    # else: neural_network = new_network(network_layers)               # create new network
+
+    # # train until 95% accurate
+    # while accuracy < 95.0:
+    # # train
+    #     train(neural_network, df, lr = 0.4, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
+    # # test
+    #     accuracy = test(neural_network, test_data=load_test_data(letter))
+    # # save trained weights
+    #     save_weights(neural_network, weights_file)
+
+    print('finished training')
+
     ### combined models
     # combined letters
     letters = ['A', 'S']
-
     # create combined network
     combined_network = combine_network(network_layers, letters, layers)
-    for layer in combined_network[-2:-1]:
-        for neuron in layer:
-            print(neuron.weights)
-
-    # load data
-    df = get_df('A_Z_cleaned.csv', letter)
-
-
-    # check if saved weights
-    if path.exists(weights_file):
-        neural_network = load_network(weights_file, network_layers)  # load saved weights
-    else: neural_network = new_network(network_layers)               # create new network
-
-    # train until 95% accurate
-    while accuracy < 95.0:
-    # train
-        train(neural_network, df, lr = 0.4, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
-    # test
-        accuracy = test(neural_network, test_data=load_test_data(letter))
-    # save trained weights
-        save_weights(neural_network, weights_file)
-
-    print('finished training')
+    accuracy = combined_test(combined_network, test_data=load_test_data(letter), letters=letters)
 
 
