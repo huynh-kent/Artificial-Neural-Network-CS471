@@ -117,7 +117,7 @@ def make_connections(network):
 
                 # setting weights along with connection
                 for i in range(len(network[network.index(layer)+1])):
-                    neuron.weights.append(round(random.uniform(-1,1), 2))
+                    neuron.weights.append(round(random.uniform(-0.5,0.5), 2))
                 #neuron.weights.append(1.0) # bias weight
             except: # pass on last layer
                 print('New Weights')
@@ -157,7 +157,8 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
     for n_batch, batch in enumerate(range(n_batches), 1):
         print(f'starting batch {n_batch}/{n_batches}')
         # same sample for each epoch
-        train_data = get_sample(data, sample_size)
+        #train_data = get_sample(data, sample_size)
+        train_data = random.sample(data, sample_size)
         for epoch_num, epoch in enumerate(range(n_epochs), 1):
             sum_error = 0.0
             # new sample each epoch
@@ -166,8 +167,8 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
             #    reset_neurons(network)
                 new_input_layer(network, row)
                 outputs = forward_prop(network, row)
-                expected = [0 for i in range(num_outputs)]
-                expected = [row[-1]]
+                expected = [0.0 for i in range(num_outputs)]
+                expected[int(row[-1])] = 1.0
 
                 # test_error = 0.0
                 # for i in range(len(expected)):
@@ -184,7 +185,8 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
                 #print(f'output {outputs} expected {expected[0]:.0f} error {error:.3f}')
             
             # print error each epoch
-            print('>epoch=%d error=%.3f -------- letter=%s lr=%.2f sample size=%d layers=%s' % (epoch_num, sum_error, letter, lr, sample_size, layers))
+            #print('>epoch=%d error=%.3f -------- letter=%s lr=%.2f sample size=%d layers=%s' % (epoch_num, sum_error, letter, lr, sample_size, layers))
+            print('>epoch=%d error=%.3f -------- lr=%.2f sample size=%d' % (epoch_num, sum_error, lr, sample_size))
 
             # if target error reached, go to next batch
             if sum_error <= target_error:
@@ -327,8 +329,8 @@ def combine_weights(network, letters, layers_path):
                         #print(f'{i} {j} {k} {j*k}')
                         neuron = network[i][k+(j*neurons_per_section)]
                         line = f.readline().strip('[]\n')
-                        print(line)
-                        print()
+                        # print(line)
+                        # print()
                         neuron.weights = [float(num) for num in line.split(',')]
 
 def combined_forward_prop(network, row, letters):
@@ -368,45 +370,81 @@ def combined_forward_prop(network, row, letters):
         inputs = new_inputs
     return inputs
 
+# Update Weights
+def combined_update_weights(network, lr):
+    for i in range(len(network)-1):
+        for j in range(len(network[i])):
+            neuron = network[i][j]
+            for k in range(len(network[i+1])):
+                #print(f'{i} {j} {k}')
+                delta = network[i+1][k].delta
+                try:
+                    neuron.weights[k] -= lr * delta * neuron.collector
+                except IndexError:
+                    pass
+            #neuron.weights[-1] -= lr * delta # bias
 
 def combined_predict(network, row, letters):
     outputs = combined_forward_prop(network, row, letters)
-    print(outputs)
-    print(outputs.index(max(outputs)))
-    # letter_output = {0:0.0, 
-    #                  1:15.0, 
-    #                  2:11.0,
-    #                  3:20.0,
-    #                  4:18.0,
-    #                  }
-    # output = letter_output.get(outputs.index(max(outputs)))
-    # print(output)
+    print(outputs, sep=' - ')
+    # print(outputs.index(max(outputs)))
+    letter_output = {0:0.0, 
+                     1:15.0, 
+                     2:11.0,
+                     3:20.0,
+                     4:18.0,
+                     }
+    outputs = softmax(outputs)
+    output = letter_output.get(outputs.index(max(outputs)))
 
-    return outputs
+    return output
 
-def combined_test(network, test_data, letters):
+def a_z_predict(network, row):
+    outputs = forward_prop(network, row)
+    outputs = softmax(outputs)
+    output = letter_output.get(outputs.index(max(outputs)))
+    return output
+
+def a_z_test(network, test_data):
     correct = 0
-    for row in test_data:
-        expected = [0 for i in range(len(network[-1]))]
-        expected[int(row[-1])] = 1
-        print(f'expected: {expected}')
-        outputs = combined_predict(network, row, letters)
-        error = abs(row[-1] - outputs[-1])
-        if error < 0.5:
+    for row_num, row in enumerate(test_data, 1):
+        #expected = [0 for i in range(len(network[-1]))]
+        expected = row[-1]
+        output = a_z_predict(network, row)
+        #print(f'expected: {expected} output: {outputs}')
+        expected_letter = letter_output.get(expected)
+        output_letter = letter_output.get(output)
+        print(f'row {row_num} - expected letter: {expected_letter} output letter: {output_letter}')
+        if expected_letter == output_letter:
             correct += 1
+        # else: print(f'failed - expected letter: {expected_letter} output letter: {output_letter}')
+        # error = abs(row[-1] - outputs[-1])
+        # if error < 0.5:
+        #     correct += 1
     #    print(f'expected: {row[-1]}, predicted: {outputs[-1]}')
     accuracy = (float(correct) / len(test_data)) * 100.0
     
     print(f'accuracy: {accuracy:.2f}% correct/total: {correct}/{len(test_data)}')
     return accuracy
 
-def combined_load_test_data(file):
+def combined_load_test_data(file, test_sample_size):
     df = pd.read_csv(file)
+    sample_df = pd.DataFrame()
+    sample_df = df.sample(test_sample_size)
     test_inputs = []
-    for index, row in df.iterrows():
+    for index, row in sample_df.iterrows():
         row = [num for num in row]
         test_inputs.append(row)
     return test_inputs
+
+
+def softmax(outputs):
+    e_x = [math.exp(i) for i in outputs]
+    sum_e_x = sum(e_x)
+    softmax_outputs = [i/sum_e_x for i in e_x]
+    #print(softmax_outputs)
+    return softmax_outputs
+
 
 def create_test_data(file, test_sample_size, letter):
     df = pd.read_csv(file)
@@ -430,6 +468,14 @@ def load_test_data(letter):
 
     return test_inputs
 
+def load_data(file):
+    df = pd.read_csv(file)
+    inputs = []
+    for index, row in df.iterrows():
+        row = [num for num in row]
+        inputs.append(row)
+    return inputs
+
 def create_compiled_test_data(file, test_sample_size, letters):
     df = pd.read_csv(file)
     test_data = pd.DataFrame()
@@ -446,27 +492,135 @@ def create_compiled_test_data(file, test_sample_size, letters):
     test_data['expected'] = np.where(test_data['expected'] > 0.0, 1.0, 0.0)
     test_data.to_csv(f'test_data_compiled.csv', index=False)
 
+# Backward Propagation
+def combined_backward_prop(network, expected, outputs):
+    for i in reversed(range(len(network))):
+        if i == 1:
+            pass
+        elif i != len(network)-1: # 3-1 not last layer
+            for j in range(len(network[i])):
+                neuron = network[i][j]
+                weighted_sum = 0.0
+                for k in range(len(network[i+1])):
+                    #print(f'{i} {j} {k}')
+                    prev_neuron = network[i+1][k]
+                    weighted_delta = neuron.weights[k] * prev_neuron.delta
+                    weighted_sum += weighted_delta
+                neuron.delta = weighted_sum * transfer_derivative(neuron.collector)
+        else: # last layer
+            for j in range(len(network[i])):
+                neuron = network[i][j]
+                weighted_sum = outputs[j] - expected[j]
+                neuron.delta = weighted_sum * transfer_derivative(neuron.collector)
+
+# Train Network
+def combined_train(network, data, lr, n_epochs, target_error, n_batches, sample_size, letters):
+    num_outputs = network_layers[-1]*len(letters)
+    letter_output = {0.0:0, 
+                    15.0:1, 
+                    11.0:2,
+                    20.0:3,
+                    18.0:4,
+                    0:0.0, 
+                    1:15.0, 
+                    2:11.0,
+                    3:20.0,
+                    4:18.0,
+                    }
+    for n_batch, batch in enumerate(range(n_batches), 1):
+        print(f'starting batch {n_batch}/{n_batches}')
+        # same sample for each epoch
+        train_data = random.sample(data, sample_size)
+        for epoch_num, epoch in enumerate(range(n_epochs), 1):
+            sum_error = 0.0
+            # new sample each epoch
+            #train_data = get_sample(data)
+            for row in train_data:
+            #    reset_neurons(network)
+                new_input_layer(network, row)
+                outputs = combined_forward_prop(network, row, letters)
+                softmax_outputs = softmax(outputs)
+                # print(f'outputs {outputs}')
+                # print(f'row[-1] {row[-1]}')
+                # print(f'letter_output {letter_output.get(row[-1])}')
+                expected = [0.0 for i in range(num_outputs)]
+                expected[int(letter_output.get(row[-1]))] = 1.0
+                print(f"expected {expected} softmax output {['%.3f' % output for output in softmax_outputs]} output {['%.3f' % output for output in outputs]}")
+
+                # test_error = 0.0
+                # for i in range(len(expected)):
+                #     test_error += (expected[i] - outputs[i])**2
+                #print(f'expected {expected} output {outputs[0]:2f}')
+
+                
+                error = sum((expected[i]-softmax_outputs[i])**2 for i in range(len(expected)))
+                sum_error += error
+
+                combined_backward_prop(network, expected, outputs)
+                combined_update_weights(network, lr)
+
+                #print(f'output {outputs} expected {expected[0]:.0f} error {error:.3f}')
+            
+            # print error each epoch
+            print('>epoch=%d error=%.3f -------- letter=%s lr=%.2f sample size=%d layers=%s' % (epoch_num, sum_error, letter, lr, sample_size, layers))
+
+            # if target error reached, go to next batch
+            if sum_error <= target_error:
+                print('target error reached=%.3f' % sum_error)
+                break
+            
+        print(f'batch {n_batch} complete with sum error {sum_error:.3f}')
+            #epoch_list.append('>epoch=%d, lr=%.2f, error=%.3f' % (epoch_num, lr, sum_error))
+        # for epoch in epoch_list:
+        #     print(epoch)
+
 ### Main
 if __name__ == '__main__':
     # declare variables
-    #neural_network = []        # main network
-    #inputs = []         # input values for input layer
     accuracy = 0.0      # accuracy of network
+    letter_output = {0.0:'A',
+                    1.0:'B',
+                2.0:'C',
+                3.0:'D',
+                4.0:'E',
+                5.0:'F',
+                6.0:'G',
+                7.0:'H',
+                8.0:'I',
+                9.0:'J',
+                10.0:'K',
+                11.0:'L',
+                12.0:'M',
+                13.0:'N',
+                14.0:'O',
+                15.0:'P',
+                16.0:'Q',
+                17.0:'R',
+                18.0:'S',
+                19.0:'T',
+                20.0:'U',
+                21.0:'V',
+                22.0:'W',
+                23.0:'X',
+                24.0:'Y',
+                25.0:'Z',
+                    }
 
-    # handwriting testing
-    # letter desired
-    letter = 'A'
+    # # handwriting testing
+    # # letter desired
+    # letter = 'S'
 
-    # create test data
-    #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
+    # ### create test data
+    # #create_test_data('A_Z_cleaned.csv', test_sample_size=1000, letter=letter)
 
-    # get network layers
-    network_layers = read_layers('handwriting_layers')
-    # network layers
-    layers = str(network_layers).replace(' ', '')
-    # weights file path
-    weights_file = f'weights_{letter}_{layers}.txt'
+    # # get network layers
+    # network_layers = read_layers('handwriting_layers')
+    # # network layers
+    # layers = str(network_layers).replace(' ', '')
+    # # weights file path
+    # weights_file = f'weights_{letter}_{layers}.txt'
 
+    ### train models
     # # load data
     # df = get_df('A_Z_cleaned.csv', letter)
 
@@ -484,13 +638,48 @@ if __name__ == '__main__':
     # # save trained weights
     #     save_weights(neural_network, weights_file)
 
+    # print('finished training')
+
+
+    # ### combined models
+    # # combined letters
+    # letters = ['A', 'P', 'L', 'U', 'S']
+
+    # if path.exists('weights_APLUS.txt'): combined_network=load_network('weights_APLUS.txt', network_layers)
+    # else: combined_network = combine_network(network_layers, letters, layers)
+    # test_data=combined_load_test_data('APLUS.csv', test_sample_size=10000)
+    # # training combined network
+    # combined_train(combined_network, test_data, lr = 0.4, n_epochs = 5, target_error = 0.05, n_batches=10000, sample_size=10, letters=letters)
+
+    # # save weights
+    # save_weights(combined_network, 'weights_APLUS.txt')
+    # # testing combined network
+    # accuracy = combined_test(combined_network, test_data=test_data, letters=letters)
+
+
+
+    ### train a_z model
+    # load data
+    df_inputs = load_data('A_Z_Data_normalized.csv')
+
+    weights_file = 'weights_a_z.txt'
+    network_layers = read_layers('a_z_layers')
+
+    # check if saved weights
+    if path.exists(weights_file):
+        neural_network = load_network(weights_file, network_layers)  # load saved weights
+    else: neural_network = new_network(network_layers)               # create new network
+
+    # train until 95% accurate
+    while accuracy < 95.0:
+    # train
+        train(neural_network, df_inputs, lr = 0.4, n_epochs = 10, target_error = 0.05, n_batches=10, sample_size=20)
+    # test
+        accuracy = a_z_test(neural_network, test_data=random.sample(df_inputs, 100))
+    # save trained weights
+        save_weights(neural_network, 'weights_a_z.txt')
+
     print('finished training')
 
-    ### combined models
-    # combined letters
-    letters = ['A', 'P', 'L', 'U', 'S']
-    # create combined network
-    combined_network = combine_network(network_layers, letters, layers)
-    #accuracy = combined_test(combined_network, test_data=combined_load_test_data('APLUS.csv'), letters=letters)
 
 
