@@ -186,7 +186,7 @@ def train(network, data, lr, n_epochs, target_error, n_batches, sample_size):
             
             # print error each epoch
             #print('>epoch=%d error=%.3f -------- letter=%s lr=%.2f sample size=%d layers=%s' % (epoch_num, sum_error, letter, lr, sample_size, layers))
-            print('>epoch=%d error=%.3f -------- lr=%.2f sample size=%d' % (epoch_num, sum_error, lr, sample_size))
+            print('>epoch=%d/%d error=%.3f -------- lr=%.2f sample size=%d' % (epoch_num, n_epochs, sum_error, lr, sample_size))
 
             # if target error reached, go to next batch
             if sum_error <= target_error:
